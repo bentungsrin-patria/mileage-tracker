@@ -1,0 +1,1915 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fleet, Mileage & Vehicle Tracker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.2);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col md:flex-row antialiased custom-scrollbar">
+
+    <!-- Mobile Header -->
+    <div class="md:hidden bg-slate-800 border-b border-slate-700 p-4 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center space-x-3">
+            <div class="bg-brand-600 p-2 rounded-lg text-white">
+                <i data-lucide="truck" class="w-6 h-6"></i>
+            </div>
+            <span class="font-bold text-lg text-white tracking-wide">FleetTracker Pro</span>
+        </div>
+        <button id="mobileMenuBtn" class="text-slate-300 hover:text-white focus:outline-none">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="hidden md:flex flex-col w-full md:w-64 bg-slate-800 border-r border-slate-700 h-screen sticky top-0 z-40 transition-all duration-300">
+        <!-- Logo -->
+        <div class="p-5 border-b border-slate-700/60 flex items-center space-x-3">
+            <div class="bg-brand-600 p-2.5 rounded-xl text-white shadow-lg shadow-brand-600/30">
+                <i data-lucide="truck" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg text-white leading-tight">FleetTracker</h1>
+                <p class="text-xs text-slate-400">Mileage & Expense System</p>
+            </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 p-4 space-y-1.5 overflow-y-auto custom-scrollbar">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn flex items-center w-full space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all text-white bg-brand-600">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                <span>Dashboard Overview</span>
+            </button>
+            <button onclick="switchTab('vehicles')" id="nav-vehicles" class="nav-btn flex items-center w-full space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-all">
+                <i data-lucide="car" class="w-5 h-5"></i>
+                <span>Fleet / Vehicles</span>
+            </button>
+            <button onclick="switchTab('drivers')" id="nav-drivers" class="nav-btn flex items-center w-full space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-all">
+                <i data-lucide="users" class="w-5 h-5"></i>
+                <span>Drivers Manager</span>
+            </button>
+            <button onclick="switchTab('mileage')" id="nav-mileage" class="nav-btn flex items-center w-full space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-all">
+                <i data-lucide="navigation" class="w-5 h-5"></i>
+                <span>Mileage Log</span>
+            </button>
+            <button onclick="switchTab('fuel')" id="nav-fuel" class="nav-btn flex items-center w-full space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-all">
+                <i data-lucide="fuel" class="w-5 h-5"></i>
+                <span>Fuel Log</span>
+            </button>
+            <button onclick="switchTab('maintenance')" id="nav-maintenance" class="nav-btn flex items-center w-full space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-all">
+                <i data-lucide="wrench" class="w-5 h-5"></i>
+                <span>Maintenance Log</span>
+            </button>
+            <button onclick="switchTab('expenses')" id="nav-expenses" class="nav-btn flex items-center w-full space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-all">
+                <i data-lucide="receipt" class="w-5 h-5"></i>
+                <span>Expense Entries</span>
+            </button>
+            <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex items-center w-full space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-all">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+                <span>Setup / Settings</span>
+            </button>
+        </nav>
+
+        <!-- Backup & Info Section -->
+        <div class="p-4 border-t border-slate-700/60 bg-slate-800/50">
+            <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                <span>Data Backup</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="exportDataJSON()" class="flex items-center justify-center space-x-1 py-1.5 px-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-medium text-slate-200 transition">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    <span>Export</span>
+                </button>
+                <label class="flex items-center justify-center space-x-1 py-1.5 px-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-medium text-slate-200 cursor-pointer transition">
+                    <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                    <span>Import</span>
+                    <input type="file" id="importFileInput" onchange="importDataJSON(event)" class="hidden" accept=".json">
+                </label>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+
+        <!-- Notification Toast -->
+        <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center space-x-3 bg-slate-800 border border-slate-700 text-white px-4 py-3 rounded-xl shadow-2xl">
+            <div id="toastIcon" class="text-emerald-400"><i data-lucide="check-circle" class="w-5 h-5"></i></div>
+            <span id="toastMessage" class="text-sm font-medium">Berhasil disimpan</span>
+        </div>
+
+        <!-- TAB 1: DASHBOARD -->
+        <section id="tab-dashboard" class="tab-content space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white tracking-tight">Fleet Analytics & Dashboard</h2>
+                    <p class="text-slate-400 text-sm">Ringkasan statistik operasional, jarak tempuh, konsumsi BBM, dan pengeluaran.</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="resetSampleData()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-medium flex items-center space-x-2 transition">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                        <span>Muat Contoh Data</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Enhanced KPI Metrics Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                <div class="bg-slate-800 border border-slate-700/70 rounded-2xl p-4 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase">
+                        <span>Total Jarak</span>
+                        <i data-lucide="map-pin" class="w-4 h-4 text-blue-400"></i>
+                    </div>
+                    <div class="mt-3 flex items-baseline space-x-1">
+                        <span id="kpiTotalMiles" class="text-xl font-bold text-white">0</span>
+                        <span class="text-slate-400 text-xs unit-dist-label">km</span>
+                    </div>
+                    <div id="kpiBizRatio" class="mt-1 text-[11px] text-emerald-400 font-medium">0% Rasio Bisnis</div>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700/70 rounded-2xl p-4 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase">
+                        <span>Biaya Jarak</span>
+                        <i data-lucide="navigation" class="w-4 h-4 text-emerald-400"></i>
+                    </div>
+                    <div class="mt-3">
+                        <span id="kpiMileageCost" class="text-xl font-bold text-white">Rp 0</span>
+                    </div>
+                    <div class="mt-1 text-[11px] text-slate-400">Estimasi biaya mileage</div>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700/70 rounded-2xl p-4 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase">
+                        <span>Tol & Parkir</span>
+                        <i data-lucide="ticket" class="w-4 h-4 text-amber-400"></i>
+                    </div>
+                    <div class="mt-3">
+                        <span id="kpiTollsParking" class="text-xl font-bold text-white">Rp 0</span>
+                    </div>
+                    <div class="mt-1 text-[11px] text-slate-400">Total tol + parkir</div>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700/70 rounded-2xl p-4 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase">
+                        <span>Total Pengeluaran</span>
+                        <i data-lucide="dollar-sign" class="w-4 h-4 text-purple-400"></i>
+                    </div>
+                    <div class="mt-3">
+                        <span id="kpiTotalExpenses" class="text-xl font-bold text-white">Rp 0</span>
+                    </div>
+                    <div class="mt-1 text-[11px] text-slate-400">BBM, servis & operasional</div>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700/70 rounded-2xl p-4 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase">
+                        <span>Status Armada</span>
+                        <i data-lucide="truck" class="w-4 h-4 text-cyan-400"></i>
+                    </div>
+                    <div class="mt-3 flex items-baseline space-x-1">
+                        <span id="kpiActiveVehicles" class="text-xl font-bold text-emerald-400">0</span>
+                        <span class="text-slate-400 text-xs">/</span>
+                        <span id="kpiTotalVehicles" class="text-xs text-slate-300">0 Unit</span>
+                    </div>
+                    <div id="kpiMaintenanceVehicles" class="mt-1 text-[11px] text-amber-400">0 Servis</div>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700/70 rounded-2xl p-4 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase">
+                        <span>Peringatan Dokumen</span>
+                        <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-400"></i>
+                    </div>
+                    <div class="mt-3">
+                        <span id="kpiExpiringCount" class="text-xl font-bold text-rose-400">0</span>
+                    </div>
+                    <div class="mt-1 text-[11px] text-slate-400">Jatuh tempo < 30 hari</div>
+                </div>
+            </div>
+
+            <!-- Visual Charts Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Trend Bar Chart -->
+                <div class="lg:col-span-2 bg-slate-800 border border-slate-700/70 rounded-2xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-white text-base">Tren Biaya Operasional Bulanan</h3>
+                        <span class="text-xs text-slate-400">6 Bulan Terakhir</span>
+                    </div>
+                    <div class="h-64 relative">
+                        <canvas id="chartMonthlyCost"></canvas>
+                    </div>
+                </div>
+
+                <!-- Expense Doughnut Chart -->
+                <div class="bg-slate-800 border border-slate-700/70 rounded-2xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-white text-base">Distribusi Pengeluaran</h3>
+                        <span class="text-xs text-slate-400">Berdasarkan Kategori</span>
+                    </div>
+                    <div class="h-64 relative flex items-center justify-center">
+                        <canvas id="chartExpenseBreakdown"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Extra Fuel Consumption Chart & Alerts -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 bg-slate-800 border border-slate-700/70 rounded-2xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-white text-base">Konsumsi Bahan Bakar per Kendaraan</h3>
+                        <span class="text-xs text-slate-400">Total Volume (<span class="unit-fuel-label">Liter</span>)</span>
+                    </div>
+                    <div class="h-56 relative">
+                        <canvas id="chartFuelConsumption"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700/70 rounded-2xl p-5">
+                    <h3 class="font-semibold text-white text-base mb-3 flex items-center space-x-2">
+                        <i data-lucide="bell" class="w-4 h-4 text-amber-400"></i>
+                        <span>Pengingat & Perhatian Masa Berlaku</span>
+                    </h3>
+                    <div id="alertsContainer" class="space-y-2 max-h-56 overflow-y-auto custom-scrollbar">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: FLEET MANAGEMENT -->
+        <section id="tab-vehicles" class="tab-content hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">🚚 Manajemen Armada Kendaraan</h2>
+                    <p class="text-slate-400 text-sm">Kelola spesifikasi kendaraan, status operasional, nomor polis, dan tanggal registrasi/asuransi.</p>
+                </div>
+                <button onclick="openVehicleModal()" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl text-sm flex items-center space-x-2 transition shadow-lg shadow-brand-600/20 self-start sm:self-auto">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Tambah Kendaraan</span>
+                </button>
+            </div>
+
+            <div class="bg-slate-800 border border-slate-700/70 rounded-2xl overflow-hidden">
+                <div class="p-4 border-b border-slate-700/60 flex flex-col sm:flex-row justify-between gap-3">
+                    <div class="relative flex-1 max-w-xs">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                        <input type="text" id="vehicleSearch" oninput="renderVehicles()" placeholder="Cari Plat, Merk, Model..." class="w-full bg-slate-900/80 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-700/60 bg-slate-900/40 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                <th class="p-4">Kendaraan</th>
+                                <th class="p-4">Plat Nomor / VIN</th>
+                                <th class="p-4">Status</th>
+                                <th class="p-4">Odometer</th>
+                                <th class="p-4">No. Polis Asuransi</th>
+                                <th class="p-4">Supir Tetap</th>
+                                <th class="p-4 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vehicleTableBody" class="divide-y divide-slate-700/40 text-sm text-slate-300">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: DRIVERS -->
+        <section id="tab-drivers" class="tab-content hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">🙍‍♂️ Profil & Data Pengemudi</h2>
+                    <p class="text-slate-400 text-sm">Kelola data supir, nomor SIM, kontak darurat, dan alokasi kendaraan.</p>
+                </div>
+                <button onclick="openDriverModal()" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl text-sm flex items-center space-x-2 transition shadow-lg shadow-brand-600/20 self-start sm:self-auto">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Tambah Pengemudi</span>
+                </button>
+            </div>
+
+            <div id="driverCardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Dynamic cards -->
+            </div>
+        </section>
+
+        <!-- TAB 4: MILEAGE LOG -->
+        <section id="tab-mileage" class="tab-content hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">🛣️ Log Perjalanan & Jarak (Mileage)</h2>
+                    <p class="text-slate-400 text-sm">Catat perjalanan bisnis/pribadi, odometer awal-akhir, biaya tol, dan parkir.</p>
+                </div>
+                <button onclick="openMileageModal()" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl text-sm flex items-center space-x-2 transition shadow-lg shadow-brand-600/20 self-start sm:self-auto">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Catat Perjalanan</span>
+                </button>
+            </div>
+
+            <div class="bg-slate-800 border border-slate-700/70 rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-700/60 bg-slate-900/40 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                <th class="p-4">Tanggal & Kategori</th>
+                                <th class="p-4">Kendaraan & Supir</th>
+                                <th class="p-4">Tujuan / Rute</th>
+                                <th class="p-4">Jarak</th>
+                                <th class="p-4">Tol & Parkir</th>
+                                <th class="p-4">Estimasi Biaya Total</th>
+                                <th class="p-4 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mileageTableBody" class="divide-y divide-slate-700/40 text-sm text-slate-300">
+                            <!-- Dynamic -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: FUEL LOG -->
+        <section id="tab-fuel" class="tab-content hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">⛽ Log Pengisian Bahan Bakar</h2>
+                    <p class="text-slate-400 text-sm">Pantau histori pengisian BBM, volume liter, total bayar, dan SPBU.</p>
+                </div>
+                <button onclick="openFuelModal()" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl text-sm flex items-center space-x-2 transition shadow-lg shadow-brand-600/20 self-start sm:self-auto">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Tambah Log BBM</span>
+                </button>
+            </div>
+
+            <div class="bg-slate-800 border border-slate-700/70 rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-700/60 bg-slate-900/40 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                <th class="p-4">Tanggal</th>
+                                <th class="p-4">Kendaraan</th>
+                                <th class="p-4">Volume BBM</th>
+                                <th class="p-4">Harga / Satuan</th>
+                                <th class="p-4">Total Biaya</th>
+                                <th class="p-4">Odometer SPBU</th>
+                                <th class="p-4">Lokasi SPBU</th>
+                                <th class="p-4 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fuelTableBody" class="divide-y divide-slate-700/40 text-sm text-slate-300">
+                            <!-- Dynamic -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 6: MAINTENANCE LOG -->
+        <section id="tab-maintenance" class="tab-content hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">🛠️ Log Perawatan & Perbaikan</h2>
+                    <p class="text-slate-400 text-sm">Catat histori pemeliharaan berkala, bengkel, biaya, dan jadwal servis mendatang.</p>
+                </div>
+                <button onclick="openMaintenanceModal()" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl text-sm flex items-center space-x-2 transition shadow-lg shadow-brand-600/20 self-start sm:self-auto">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Catat Perawatan</span>
+                </button>
+            </div>
+
+            <div class="bg-slate-800 border border-slate-700/70 rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-700/60 bg-slate-900/40 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                <th class="p-4">Tanggal</th>
+                                <th class="p-4">Kendaraan</th>
+                                <th class="p-4">Jenis Perawatan</th>
+                                <th class="p-4">Bengkel / Workshop</th>
+                                <th class="p-4">Biaya</th>
+                                <th class="p-4">Jadwal Servis Berikutnya</th>
+                                <th class="p-4 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="maintenanceTableBody" class="divide-y divide-slate-700/40 text-sm text-slate-300">
+                            <!-- Dynamic -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 7: EXPENSES LOG -->
+        <section id="tab-expenses" class="tab-content hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">💸 Pengeluaran Operasional Lainnya</h2>
+                    <p class="text-slate-400 text-sm">Kelola pengeluaran pajak STNK, polis asuransi, pencucian, sewa, dan perizinan.</p>
+                </div>
+                <button onclick="openExpenseModal()" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl text-sm flex items-center space-x-2 transition shadow-lg shadow-brand-600/20 self-start sm:self-auto">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Tambah Pengeluaran</span>
+                </button>
+            </div>
+
+            <div class="bg-slate-800 border border-slate-700/70 rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-700/60 bg-slate-900/40 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                <th class="p-4">Tanggal</th>
+                                <th class="p-4">Kendaraan</th>
+                                <th class="p-4">Kategori</th>
+                                <th class="p-4">Deskripsi / Catatan</th>
+                                <th class="p-4">Jumlah Biaya</th>
+                                <th class="p-4 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expenseTableBody" class="divide-y divide-slate-700/40 text-sm text-slate-300">
+                            <!-- Dynamic -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 8: SETTINGS -->
+        <section id="tab-settings" class="tab-content hidden space-y-6">
+            <div>
+                <h2 class="text-2xl font-bold text-white">⚙️ Pengaturan System & Konfigurasi</h2>
+                <p class="text-slate-400 text-sm">Sesuaikan unit standar pengukuran, mata uang lokal, dan biaya default per unit jarak.</p>
+            </div>
+
+            <div class="bg-slate-800 border border-slate-700/70 rounded-2xl p-6 max-w-2xl space-y-5">
+                <form id="settingsForm" onsubmit="saveSettings(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Simbol Mata Uang</label>
+                            <select id="settingCurrency" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+                                <option value="Rp">IDR (Rp)</option>
+                                <option value="$">USD ($)</option>
+                                <option value="€">EUR (€)</option>
+                                <option value="£">GBP (£)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Satuan Jarak Standar</label>
+                            <select id="settingDistanceUnit" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+                                <option value="km">Kilometer (km)</option>
+                                <option value="mi">Miles (mi)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Satuan Bahan Bakar</label>
+                            <select id="settingFuelUnit" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+                                <option value="Liters">Liter (L)</option>
+                                <option value="Gallons">Galon (Gal)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Estimasi Biaya per Jarak (Otomatis)</label>
+                            <input type="number" step="0.01" id="settingCostPerUnit" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-700 flex items-center justify-between">
+                        <button type="button" onclick="clearAllData()" class="px-4 py-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/30 rounded-xl text-xs font-medium transition">
+                            Hapus Seluruh Data
+                        </button>
+                        <button type="submit" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl text-sm transition shadow-lg shadow-brand-600/20">
+                            Simpan Perubahan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL DIALOGS -->
+
+    <!-- Vehicle Modal -->
+    <div id="vehicleModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto custom-scrollbar p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+                <h3 id="vehicleModalTitle" class="text-lg font-bold text-white">Tambah Kendaraan</h3>
+                <button onclick="closeModal('vehicleModal')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="vehicleForm" onsubmit="saveVehicle(event)" class="space-y-4">
+                <input type="hidden" id="vehId">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Merk / Brand</label>
+                        <input type="text" id="vehMake" placeholder="Toyota, Isuzu, Honda" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Model & Tipe</label>
+                        <input type="text" id="vehModel" placeholder="Avanza 1.5 G, Elf Box" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Tahun</label>
+                        <input type="number" id="vehYear" placeholder="2022" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Plat Nomor</label>
+                        <input type="text" id="vehPlate" placeholder="B 1234 ABC" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">VIN / No. Rangka</label>
+                        <input type="text" id="vehVin" placeholder="MHK123..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Odometer Terakhir</label>
+                        <input type="number" id="vehOdometer" placeholder="45000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Status Kendaraan</label>
+                        <select id="vehStatus" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                            <option value="Active">Aktif (Active)</option>
+                            <option value="In Maintenance">Dalam Perawatan</option>
+                            <option value="Reserved">Direservasi</option>
+                            <option value="Retired">Dinonaktifkan</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">No. Polis Asuransi</label>
+                        <input type="text" id="vehInsuranceNo" placeholder="POL-9920192" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Pengemudi Utama</label>
+                        <select id="vehDefaultDriver" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                            <option value="">-- Tanpa Supir Tetap --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Masa Berlaku STNK</label>
+                        <input type="date" id="vehRegExpiry" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Masa Berlaku Asuransi</label>
+                        <input type="date" id="vehInsExpiry" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-700">
+                    <button type="button" onclick="closeModal('vehicleModal')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-xs font-medium text-white transition">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 rounded-xl text-xs font-medium text-white transition">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Driver Modal -->
+    <div id="driverModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scrollbar p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+                <h3 id="driverModalTitle" class="text-lg font-bold text-white">Tambah Pengemudi</h3>
+                <button onclick="closeModal('driverModal')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="driverForm" onsubmit="saveDriver(event)" class="space-y-4">
+                <input type="hidden" id="drvId">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Nama Lengkap</label>
+                    <input type="text" id="drvName" placeholder="Budi Santoso" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">No. Telepon / WhatsApp</label>
+                        <input type="text" id="drvPhone" placeholder="08123456789" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Kontak Darurat</label>
+                        <input type="text" id="drvEmergency" placeholder="Istri: 0819876543" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Nomor SIM</label>
+                        <input type="text" id="drvLicense" placeholder="928374109283" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Masa Berlaku SIM</label>
+                        <input type="date" id="drvLicenseExpiry" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Status</label>
+                    <select id="drvStatus" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                        <option value="Active">Aktif</option>
+                        <option value="On Leave">Cuti / On Leave</option>
+                        <option value="Inactive">Nonaktif</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-700">
+                    <button type="button" onclick="closeModal('driverModal')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-xs font-medium text-white transition">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 rounded-xl text-xs font-medium text-white transition">Simpan Driver</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Mileage Modal -->
+    <div id="mileageModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto custom-scrollbar p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+                <h3 id="mileageModalTitle" class="text-lg font-bold text-white">Tambah Perjalanan</h3>
+                <button onclick="closeModal('mileageModal')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="mileageForm" onsubmit="saveMileage(event)" class="space-y-4">
+                <input type="hidden" id="mlgId">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Tanggal</label>
+                        <input type="date" id="mlgDate" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Kategori Perjalanan</label>
+                        <select id="mlgCategory" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                            <option value="Business">Bisnis / Operasional</option>
+                            <option value="Personal">Pribadi</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Kendaraan</label>
+                        <select id="mlgVehicle" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Pengemudi</label>
+                        <select id="mlgDriver" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required></select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Tujuan / Keperluan Perjalanan</label>
+                    <input type="text" id="mlgPurpose" placeholder="Pengiriman Paket ke Klien A" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Odometer Mulai</label>
+                        <input type="number" id="mlgOdoStart" placeholder="10000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Odometer Selesai</label>
+                        <input type="number" id="mlgOdoEnd" placeholder="10150" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Biaya Tol</label>
+                        <input type="number" id="mlgToll" value="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Biaya Parkir</label>
+                        <input type="number" id="mlgParking" value="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-700">
+                    <button type="button" onclick="closeModal('mileageModal')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-xs font-medium text-white transition">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 rounded-xl text-xs font-medium text-white transition">Simpan Log</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Fuel Modal -->
+    <div id="fuelModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto custom-scrollbar p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+                <h3 id="fuelModalTitle" class="text-lg font-bold text-white">Tambah Log BBM</h3>
+                <button onclick="closeModal('fuelModal')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="fuelForm" onsubmit="saveFuel(event)" class="space-y-4">
+                <input type="hidden" id="fuelId">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Tanggal</label>
+                        <input type="date" id="fuelDate" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Kendaraan</label>
+                        <select id="fuelVehicle" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required></select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Volume (<span class="unit-fuel-label">Liter</span>)</label>
+                        <input type="number" step="0.01" id="fuelVolume" placeholder="35.5" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Total Biaya</label>
+                        <input type="number" id="fuelCost" placeholder="450000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Odometer SPBU</label>
+                        <input type="number" id="fuelOdometer" placeholder="10200" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Lokasi SPBU</label>
+                        <input type="text" id="fuelStation" placeholder="Pertamina Km 19" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-700">
+                    <button type="button" onclick="closeModal('fuelModal')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-xs font-medium text-white transition">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 rounded-xl text-xs font-medium text-white transition">Simpan Log</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Maintenance Modal -->
+    <div id="maintenanceModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scrollbar p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+                <h3 id="maintenanceModalTitle" class="text-lg font-bold text-white">Tambah Perawatan</h3>
+                <button onclick="closeModal('maintenanceModal')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="maintenanceForm" onsubmit="saveMaintenance(event)" class="space-y-4">
+                <input type="hidden" id="mntId">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Tanggal</label>
+                        <input type="date" id="mntDate" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Kendaraan</label>
+                        <select id="mntVehicle" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required></select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Jenis Perawatan</label>
+                        <input type="text" id="mntType" placeholder="Ganti Oli, Servis Rem" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Bengkel</label>
+                        <input type="text" id="mntGarage" placeholder="Bengkel Resmi Toyota" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Biaya</label>
+                        <input type="number" id="mntCost" placeholder="750000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Tgl Servis Berikutnya</label>
+                        <input type="date" id="mntNextDate" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-700">
+                    <button type="button" onclick="closeModal('maintenanceModal')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-xs font-medium text-white transition">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 rounded-xl text-xs font-medium text-white transition">Simpan Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Expense Modal -->
+    <div id="expenseModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto custom-scrollbar p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+                <h3 id="expenseModalTitle" class="text-lg font-bold text-white">Tambah Pengeluaran</h3>
+                <button onclick="closeModal('expenseModal')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="expenseForm" onsubmit="saveExpense(event)" class="space-y-4">
+                <input type="hidden" id="expId">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Tanggal</label>
+                        <input type="date" id="expDate" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Kendaraan</label>
+                        <select id="expVehicle" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required></select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Kategori</label>
+                        <select id="expCategory" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                            <option value="Insurance">Asuransi</option>
+                            <option value="Licensing">Pajak STNK / Perizinan</option>
+                            <option value="Cleaning">Pencucian / Salon Mobil</option>
+                            <option value="Lease">Cicilan / Sewa</option>
+                            <option value="Accessories">Aksesoris / Perlengkapan</option>
+                            <option value="Other">Lain-lain</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Jumlah Biaya</label>
+                        <input type="number" id="expAmount" placeholder="1500000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Keterangan</label>
+                    <textarea id="expDescription" rows="2" placeholder="Detail pengeluaran..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" required></textarea>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-700">
+                    <button type="button" onclick="closeModal('expenseModal')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-xs font-medium text-white transition">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 rounded-xl text-xs font-medium text-white transition">Simpan Pengeluaran</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP JAVASCRIPT -->
+    <script>
+        const STORAGE_KEY = 'fleet_tracker_app_data_v2';
+
+        let store = {
+            settings: {
+                currency: 'Rp',
+                distanceUnit: 'km',
+                fuelUnit: 'Liters',
+                costPerUnit: 2500
+            },
+            vehicles: [],
+            drivers: [],
+            mileage: [],
+            fuel: [],
+            maintenance: [],
+            expenses: []
+        };
+
+        let chartMonthlyCostInstance = null;
+        let chartExpenseBreakdownInstance = null;
+        let chartFuelConsumptionInstance = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            loadStoredData();
+            
+            document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.toggle('hidden');
+            });
+
+            refreshAllUI();
+        });
+
+        function loadStoredData() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            if (data) {
+                try {
+                    store = JSON.parse(data);
+                } catch (e) {
+                    loadSampleData();
+                }
+            } else {
+                loadSampleData();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+            refreshAllUI();
+        }
+
+        function loadSampleData() {
+            const today = new Date();
+            const formatDate = (d) => d.toISOString().split('T')[0];
+
+            store = {
+                settings: {
+                    currency: 'Rp',
+                    distanceUnit: 'km',
+                    fuelUnit: 'Liters',
+                    costPerUnit: 2500
+                },
+                vehicles: [
+                    {
+                        id: 'v1',
+                        make: 'Toyota',
+                        model: 'Avanza 1.5 G',
+                        year: '2022',
+                        plate: 'B 1492 TKO',
+                        vin: 'MHKX1283910293',
+                        odometer: 32450,
+                        status: 'Active',
+                        insuranceNo: 'INS-920192',
+                        regExpiry: '2026-11-15',
+                        insExpiry: '2026-12-01',
+                        defaultDriverId: 'd1'
+                    },
+                    {
+                        id: 'v2',
+                        make: 'Isuzu',
+                        model: 'Elf Box 4 Roda',
+                        year: '2020',
+                        plate: 'B 9201 FDF',
+                        vin: 'MHKS8392019283',
+                        odometer: 78900,
+                        status: 'Active',
+                        insuranceNo: 'INS-883920',
+                        regExpiry: '2026-11-05',
+                        insExpiry: '2027-01-20',
+                        defaultDriverId: 'd2'
+                    }
+                ],
+                drivers: [
+                    {
+                        id: 'd1',
+                        name: 'Budi Santoso',
+                        phone: '081298765432',
+                        emergency: 'Istri: 0812334455',
+                        license: '9283-1920-00123',
+                        licenseExpiry: '2027-08-20',
+                        status: 'Active'
+                    },
+                    {
+                        id: 'd2',
+                        name: 'Ahmad Supardi',
+                        phone: '085711223344',
+                        emergency: 'Adik: 0857009988',
+                        license: '8392-1029-00987',
+                        licenseExpiry: '2026-11-12',
+                        status: 'Active'
+                    }
+                ],
+                mileage: [
+                    {
+                        id: 'm1',
+                        date: formatDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2)),
+                        category: 'Business',
+                        vehicleId: 'v1',
+                        driverId: 'd1',
+                        purpose: 'Kunjungan Klien Cikarang',
+                        odoStart: 32300,
+                        odoEnd: 32450,
+                        distance: 150,
+                        toll: 68000,
+                        parking: 15000,
+                        totalCost: 458000
+                    }
+                ],
+                fuel: [
+                    {
+                        id: 'f1',
+                        date: formatDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 3)),
+                        vehicleId: 'v1',
+                        volume: 38,
+                        cost: 522500,
+                        unitPrice: 13750,
+                        odometer: 32300,
+                        station: 'Pertamina Km 19'
+                    }
+                ],
+                maintenance: [
+                    {
+                        id: 'mt1',
+                        date: formatDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 10)),
+                        vehicleId: 'v1',
+                        type: 'Servis Berkala 30.000 KM',
+                        garage: 'Toyota Auto2000',
+                        cost: 1250000,
+                        nextDate: formatDate(new Date(today.getFullYear(), today.getMonth() + 6, today.getDate()))
+                    }
+                ],
+                expenses: [
+                    {
+                        id: 'e1',
+                        date: formatDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 15)),
+                        vehicleId: 'v1',
+                        category: 'Licensing',
+                        amount: 3200000,
+                        description: 'Pembayaran Pajak Tahunan STNK Kendaraan'
+                    }
+                ]
+            };
+            saveData();
+        }
+
+        function resetSampleData() {
+            if (confirm("Reset data ke contoh awal?")) {
+                loadSampleData();
+                showToast("Data contoh berhasil dimuat ulang");
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-brand-600', 'text-white');
+                btn.classList.add('text-slate-400', 'hover:text-slate-200');
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if (activeNav) {
+                activeNav.classList.add('bg-brand-600', 'text-white');
+                activeNav.classList.remove('text-slate-400');
+            }
+
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('hidden');
+            }
+
+            if (tabId === 'dashboard') {
+                renderDashboard();
+            }
+        }
+
+        function refreshAllUI() {
+            updateUnitLabels();
+            renderDashboard();
+            renderVehicles();
+            renderDrivers();
+            renderMileage();
+            renderFuel();
+            renderMaintenance();
+            renderExpenses();
+            loadSettingsForm();
+            populateSelectOptions();
+        }
+
+        function updateUnitLabels() {
+            document.querySelectorAll('.unit-dist-label').forEach(el => el.textContent = store.settings.distanceUnit);
+            document.querySelectorAll('.unit-fuel-label').forEach(el => el.textContent = store.settings.fuelUnit === 'Liters' ? 'Liter' : 'Galon');
+        }
+
+        function formatCurrency(num) {
+            const val = parseFloat(num) || 0;
+            return `${store.settings.currency} ${val.toLocaleString('id-ID')}`;
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.textContent = msg;
+            toastIcon.className = isError ? 'text-rose-400' : 'text-emerald-400';
+            toastIcon.innerHTML = isError ? '<i data-lucide="alert-circle" class="w-5 h-5"></i>' : '<i data-lucide="check-circle" class="w-5 h-5"></i>';
+            lucide.createIcons();
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function getVehicleName(id) {
+            const v = store.vehicles.find(item => item.id === id);
+            return v ? `${v.make} ${v.model} (${v.plate})` : 'Dihapus';
+        }
+
+        function getDriverName(id) {
+            const d = store.drivers.find(item => item.id === id);
+            return d ? d.name : 'Unassigned';
+        }
+
+        function populateSelectOptions() {
+            const vehSelects = ['mlgVehicle', 'fuelVehicle', 'mntVehicle', 'expVehicle'];
+            const drvSelects = ['mlgDriver', 'vehDefaultDriver'];
+
+            const vehOptions = store.vehicles.map(v => `<option value="${v.id}">${v.make} ${v.model} [${v.plate}]</option>`).join('');
+            const drvOptions = store.drivers.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+
+            vehSelects.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = vehOptions || '<option value="">(Belum Ada Kendaraan)</option>';
+            });
+
+            drvSelects.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (id === 'vehDefaultDriver') {
+                        el.innerHTML = '<option value="">-- Tanpa Supir Tetap --</option>' + drvOptions;
+                    } else {
+                        el.innerHTML = drvOptions || '<option value="">(Belum Ada Pengemudi)</option>';
+                    }
+                }
+            });
+        }
+
+        // ================= DASHBOARD & CHARTS =================
+        function renderDashboard() {
+            let totalDist = 0, bizDist = 0, persDist = 0, totalTollsParking = 0;
+
+            store.mileage.forEach(m => {
+                const dist = parseFloat(m.distance) || 0;
+                totalDist += dist;
+                if (m.category === 'Business') bizDist += dist;
+                else persDist += dist;
+
+                totalTollsParking += (parseFloat(m.toll) || 0) + (parseFloat(m.parking) || 0);
+            });
+
+            const mileageCostTotal = totalDist * store.settings.costPerUnit;
+            const totalFuelCost = store.fuel.reduce((acc, curr) => acc + (parseFloat(curr.cost) || 0), 0);
+            const totalMntCost = store.maintenance.reduce((acc, curr) => acc + (parseFloat(curr.cost) || 0), 0);
+            const totalExpCost = store.expenses.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+
+            const grandTotalExpenses = totalFuelCost + totalMntCost + totalExpCost + totalTollsParking;
+            const bizRatio = totalDist > 0 ? Math.round((bizDist / totalDist) * 100) : 0;
+
+            document.getElementById('kpiTotalMiles').textContent = totalDist.toLocaleString('id-ID');
+            document.getElementById('kpiMileageCost').textContent = formatCurrency(mileageCostTotal);
+            document.getElementById('kpiTollsParking').textContent = formatCurrency(totalTollsParking);
+            document.getElementById('kpiTotalExpenses').textContent = formatCurrency(grandTotalExpenses);
+            document.getElementById('kpiBizRatio').textContent = `${bizRatio}% Rasio Bisnis (${bizDist} ${store.settings.distanceUnit})`;
+
+            const activeVehicles = store.vehicles.filter(v => v.status === 'Active').length;
+            const mntVehicles = store.vehicles.filter(v => v.status === 'In Maintenance').length;
+            document.getElementById('kpiActiveVehicles').textContent = activeVehicles;
+            document.getElementById('kpiTotalVehicles').textContent = `${store.vehicles.length} Unit`;
+            document.getElementById('kpiMaintenanceVehicles').textContent = `${mntVehicles} Servis`;
+
+            const today = new Date();
+            let alertItems = [];
+
+            store.vehicles.forEach(v => {
+                if (v.regExpiry) {
+                    const days = Math.ceil((new Date(v.regExpiry) - today) / (1000 * 60 * 60 * 24));
+                    if (days <= 30) {
+                        alertItems.push({
+                            type: 'danger',
+                            title: `STNK (${v.plate})`,
+                            desc: days < 0 ? `Kedaluwarsa ${Math.abs(days)} hari lalu!` : `Jatuh tempo ${days} hari lagi.`
+                        });
+                    }
+                }
+                if (v.insExpiry) {
+                    const days = Math.ceil((new Date(v.insExpiry) - today) / (1000 * 60 * 60 * 24));
+                    if (days <= 30) {
+                        alertItems.push({
+                            type: 'warning',
+                            title: `Asuransi (${v.plate})`,
+                            desc: days < 0 ? `Berakhir ${Math.abs(days)} hari lalu!` : `Habis ${days} hari lagi.`
+                        });
+                    }
+                }
+            });
+
+            store.drivers.forEach(d => {
+                if (d.licenseExpiry) {
+                    const days = Math.ceil((new Date(d.licenseExpiry) - today) / (1000 * 60 * 60 * 24));
+                    if (days <= 30) {
+                        alertItems.push({
+                            type: 'warning',
+                            title: `SIM Driver (${d.name})`,
+                            desc: days < 0 ? `SIM Kedaluwarsa!` : `Masa habis ${days} hari lagi.`
+                        });
+                    }
+                }
+            });
+
+            document.getElementById('kpiExpiringCount').textContent = alertItems.length;
+
+            const alertBox = document.getElementById('alertsContainer');
+            if (alertItems.length === 0) {
+                alertBox.innerHTML = `<div class="p-4 bg-slate-900/40 rounded-xl text-center text-xs text-slate-400">Semua dokumen & lisensi aktif.</div>`;
+            } else {
+                alertBox.innerHTML = alertItems.map(a => `
+                    <div class="p-3 bg-slate-900/60 rounded-xl border-l-4 ${a.type === 'danger' ? 'border-rose-500' : 'border-amber-500'} flex items-start space-x-2">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 ${a.type === 'danger' ? 'text-rose-400' : 'text-amber-400'} mt-0.5"></i>
+                        <div>
+                            <div class="text-xs font-semibold text-slate-200">${a.title}</div>
+                            <div class="text-xs text-slate-400 mt-0.5">${a.desc}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            lucide.createIcons();
+
+            renderCharts(totalFuelCost, totalMntCost, totalTollsParking, totalExpCost);
+        }
+
+        function renderCharts(fuelCost, mntCost, tollCost, otherCost) {
+            // Chart 1: Expense Doughnut Chart
+            const ctxExpense = document.getElementById('chartExpenseBreakdown').getContext('2d');
+            if (chartExpenseBreakdownInstance) chartExpenseBreakdownInstance.destroy();
+
+            chartExpenseBreakdownInstance = new Chart(ctxExpense, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Bahan Bakar', 'Perawatan', 'Tol & Parkir', 'Lainnya'],
+                    datasets: [{
+                        data: [fuelCost, mntCost, tollCost, otherCost],
+                        backgroundColor: ['#0284c7', '#f59e0b', '#10b981', '#ec4899'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 11 } } } }
+                }
+            });
+
+            // Chart 2: Monthly Trend Bar Chart
+            const ctxMonthly = document.getElementById('chartMonthlyCost').getContext('2d');
+            if (chartMonthlyCostInstance) chartMonthlyCostInstance.destroy();
+
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
+            const today = new Date();
+            const labels = [];
+            const dataMonthly = [0, 0, 0, 0, 0, 0];
+
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                labels.push(`${monthNames[d.getMonth()]} ${d.getFullYear().toString().substr(-2)}`);
+            }
+
+            const addCostToMonth = (dateStr, amount) => {
+                if (!dateStr) return;
+                const date = new Date(dateStr);
+                const diffMonth = (today.getFullYear() - date.getFullYear()) * 12 + (today.getMonth() - date.getMonth());
+                if (diffMonth >= 0 && diffMonth < 6) {
+                    dataMonthly[5 - diffMonth] += parseFloat(amount) || 0;
+                }
+            };
+
+            store.fuel.forEach(f => addCostToMonth(f.date, f.cost));
+            store.maintenance.forEach(m => addCostToMonth(m.date, m.cost));
+            store.expenses.forEach(e => addCostToMonth(e.date, e.amount));
+            store.mileage.forEach(m => addCostToMonth(m.date, (parseFloat(m.toll) || 0) + (parseFloat(m.parking) || 0)));
+
+            chartMonthlyCostInstance = new Chart(ctxMonthly, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Biaya',
+                        data: dataMonthly,
+                        backgroundColor: 'rgba(2, 132, 199, 0.6)',
+                        borderColor: '#0284c7',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+                        y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Chart 3: Fuel Volume per Vehicle Chart
+            const ctxFuel = document.getElementById('chartFuelConsumption').getContext('2d');
+            if (chartFuelConsumptionInstance) chartFuelConsumptionInstance.destroy();
+
+            const vehLabels = store.vehicles.map(v => v.plate);
+            const vehFuelVol = store.vehicles.map(v => {
+                return store.fuel
+                    .filter(f => f.vehicleId === v.id)
+                    .reduce((acc, curr) => acc + (parseFloat(curr.volume) || 0), 0);
+            });
+
+            chartFuelConsumptionInstance = new Chart(ctxFuel, {
+                type: 'bar',
+                data: {
+                    labels: vehLabels,
+                    datasets: [{
+                        label: 'Volume BBM',
+                        data: vehFuelVol,
+                        backgroundColor: '#10b981',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+                        y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // ================= VEHICLES =================
+        function renderVehicles() {
+            const tbody = document.getElementById('vehicleTableBody');
+            const search = document.getElementById('vehicleSearch').value.toLowerCase();
+
+            const filtered = store.vehicles.filter(v => 
+                v.make.toLowerCase().includes(search) || 
+                v.model.toLowerCase().includes(search) || 
+                v.plate.toLowerCase().includes(search)
+            );
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Tidak ada kendaraan.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(v => {
+                const driverName = getDriverName(v.defaultDriverId);
+                const statusBadge = {
+                    'Active': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+                    'In Maintenance': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+                    'Retired': 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                }[v.status] || 'bg-slate-500/10 text-slate-400';
+
+                return `
+                    <tr class="hover:bg-slate-700/30 transition">
+                        <td class="p-4 font-semibold text-white">
+                            ${v.make} ${v.model}
+                            <div class="text-xs text-slate-400 font-normal">Tahun: ${v.year}</div>
+                        </td>
+                        <td class="p-4">
+                            <span class="px-2 py-1 bg-slate-900 border border-slate-700 rounded font-mono text-xs text-amber-300 font-semibold">${v.plate}</span>
+                        </td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-medium border ${statusBadge}">${v.status}</span>
+                        </td>
+                        <td class="p-4 font-mono text-xs">${v.odometer.toLocaleString('id-ID')} ${store.settings.distanceUnit}</td>
+                        <td class="p-4 text-xs">${v.insuranceNo || '-'}</td>
+                        <td class="p-4 text-xs">${driverName}</td>
+                        <td class="p-4 text-right space-x-2">
+                            <button onclick="editVehicle('${v.id}')" class="text-slate-400 hover:text-brand-400"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <button onclick="deleteVehicle('${v.id}')" class="text-slate-400 hover:text-rose-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function openVehicleModal() {
+            document.getElementById('vehicleForm').reset();
+            document.getElementById('vehId').value = '';
+            document.getElementById('vehicleModalTitle').textContent = 'Tambah Kendaraan';
+            document.getElementById('vehicleModal').classList.remove('hidden');
+        }
+
+        function editVehicle(id) {
+            const v = store.vehicles.find(item => item.id === id);
+            if (!v) return;
+
+            document.getElementById('vehId').value = v.id;
+            document.getElementById('vehMake').value = v.make;
+            document.getElementById('vehModel').value = v.model;
+            document.getElementById('vehYear').value = v.year;
+            document.getElementById('vehPlate').value = v.plate;
+            document.getElementById('vehVin').value = v.vin || '';
+            document.getElementById('vehOdometer').value = v.odometer;
+            document.getElementById('vehStatus').value = v.status;
+            document.getElementById('vehInsuranceNo').value = v.insuranceNo || '';
+            document.getElementById('vehRegExpiry').value = v.regExpiry || '';
+            document.getElementById('vehInsExpiry').value = v.insExpiry || '';
+            document.getElementById('vehDefaultDriver').value = v.defaultDriverId || '';
+
+            document.getElementById('vehicleModalTitle').textContent = 'Edit Kendaraan';
+            document.getElementById('vehicleModal').classList.remove('hidden');
+        }
+
+        function saveVehicle(e) {
+            e.preventDefault();
+            const id = document.getElementById('vehId').value;
+            const vehData = {
+                id: id || 'v_' + Date.now(),
+                make: document.getElementById('vehMake').value,
+                model: document.getElementById('vehModel').value,
+                year: document.getElementById('vehYear').value,
+                plate: document.getElementById('vehPlate').value,
+                vin: document.getElementById('vehVin').value,
+                odometer: parseFloat(document.getElementById('vehOdometer').value) || 0,
+                status: document.getElementById('vehStatus').value,
+                insuranceNo: document.getElementById('vehInsuranceNo').value,
+                regExpiry: document.getElementById('vehRegExpiry').value,
+                insExpiry: document.getElementById('vehInsExpiry').value,
+                defaultDriverId: document.getElementById('vehDefaultDriver').value
+            };
+
+            if (id) {
+                const idx = store.vehicles.findIndex(v => v.id === id);
+                if (idx !== -1) store.vehicles[idx] = vehData;
+            } else {
+                store.vehicles.push(vehData);
+            }
+
+            saveData();
+            closeModal('vehicleModal');
+            showToast('Kendaraan berhasil disimpan');
+        }
+
+        function deleteVehicle(id) {
+            if (confirm('Hapus kendaraan ini?')) {
+                store.vehicles = store.vehicles.filter(v => v.id !== id);
+                saveData();
+                showToast('Kendaraan dihapus');
+            }
+        }
+
+        // ================= DRIVERS =================
+        function renderDrivers() {
+            const container = document.getElementById('driverCardsContainer');
+            if (store.drivers.length === 0) {
+                container.innerHTML = `<div class="col-span-full p-8 text-center bg-slate-800 border border-slate-700/60 rounded-2xl text-slate-400">Belum ada pengemudi.</div>`;
+                return;
+            }
+
+            container.innerHTML = store.drivers.map(d => {
+                return `
+                    <div class="bg-slate-800 border border-slate-700/70 rounded-2xl p-5 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center font-bold text-white uppercase">
+                                        ${d.name.substr(0, 2)}
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-white">${d.name}</h4>
+                                        <span class="text-xs text-slate-400">${d.phone}</span>
+                                    </div>
+                                </div>
+                                <span class="px-2 py-0.5 text-xs rounded-full ${d.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-700 text-slate-400'}">${d.status}</span>
+                            </div>
+                            <div class="space-y-1 text-xs text-slate-300 border-t border-slate-700/60 pt-3 mt-3">
+                                <div><span class="text-slate-500">SIM:</span> ${d.license}</div>
+                                <div><span class="text-slate-500">Masa Berlaku SIM:</span> ${d.licenseExpiry}</div>
+                                <div><span class="text-slate-500">Kontak Darurat:</span> ${d.emergency || '-'}</div>
+                            </div>
+                        </div>
+                        <div class="flex justify-end space-x-2 mt-4 pt-3 border-t border-slate-700/60">
+                            <button onclick="editDriver('${d.id}')" class="text-xs px-2.5 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-200 transition">Edit</button>
+                            <button onclick="deleteDriver('${d.id}')" class="text-xs px-2.5 py-1.5 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 rounded-lg transition">Hapus</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function openDriverModal() {
+            document.getElementById('driverForm').reset();
+            document.getElementById('drvId').value = '';
+            document.getElementById('driverModalTitle').textContent = 'Tambah Pengemudi';
+            document.getElementById('driverModal').classList.remove('hidden');
+        }
+
+        function editDriver(id) {
+            const d = store.drivers.find(item => item.id === id);
+            if (!d) return;
+
+            document.getElementById('drvId').value = d.id;
+            document.getElementById('drvName').value = d.name;
+            document.getElementById('drvPhone').value = d.phone;
+            document.getElementById('drvEmergency').value = d.emergency || '';
+            document.getElementById('drvLicense').value = d.license;
+            document.getElementById('drvLicenseExpiry').value = d.licenseExpiry;
+            document.getElementById('drvStatus').value = d.status;
+
+            document.getElementById('driverModalTitle').textContent = 'Edit Pengemudi';
+            document.getElementById('driverModal').classList.remove('hidden');
+        }
+
+        function saveDriver(e) {
+            e.preventDefault();
+            const id = document.getElementById('drvId').value;
+            const drvData = {
+                id: id || 'd_' + Date.now(),
+                name: document.getElementById('drvName').value,
+                phone: document.getElementById('drvPhone').value,
+                emergency: document.getElementById('drvEmergency').value,
+                license: document.getElementById('drvLicense').value,
+                licenseExpiry: document.getElementById('drvLicenseExpiry').value,
+                status: document.getElementById('drvStatus').value
+            };
+
+            if (id) {
+                const idx = store.drivers.findIndex(d => d.id === id);
+                if (idx !== -1) store.drivers[idx] = drvData;
+            } else {
+                store.drivers.push(drvData);
+            }
+
+            saveData();
+            closeModal('driverModal');
+            showToast('Pengemudi disimpan');
+        }
+
+        function deleteDriver(id) {
+            if (confirm('Hapus profil pengemudi ini?')) {
+                store.drivers = store.drivers.filter(d => d.id !== id);
+                saveData();
+                showToast('Pengemudi dihapus');
+            }
+        }
+
+        // ================= MILEAGE =================
+        function renderMileage() {
+            const tbody = document.getElementById('mileageTableBody');
+            if (store.mileage.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Belum ada riwayat perjalanan.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = store.mileage.map(m => {
+                const vehName = getVehicleName(m.vehicleId);
+                const drvName = getDriverName(m.driverId);
+                const tollPark = (parseFloat(m.toll) || 0) + (parseFloat(m.parking) || 0);
+
+                return `
+                    <tr class="hover:bg-slate-700/30 transition">
+                        <td class="p-4 text-xs text-slate-300">
+                            <div class="font-medium text-white">${m.date}</div>
+                            <span class="px-2 py-0.5 rounded text-[10px] ${m.category === 'Business' ? 'bg-blue-500/10 text-blue-400' : 'bg-amber-500/10 text-amber-400'}">${m.category}</span>
+                        </td>
+                        <td class="p-4 text-xs">
+                            <div class="font-semibold text-white">${vehName}</div>
+                            <div class="text-slate-400">Driver: ${drvName}</div>
+                        </td>
+                        <td class="p-4 text-xs text-slate-300 font-medium">${m.purpose}</td>
+                        <td class="p-4 text-xs font-mono font-semibold text-emerald-400">${m.distance} ${store.settings.distanceUnit}</td>
+                        <td class="p-4 text-xs">${formatCurrency(tollPark)}</td>
+                        <td class="p-4 text-xs font-semibold text-white">${formatCurrency(m.totalCost)}</td>
+                        <td class="p-4 text-right">
+                            <button onclick="deleteMileage('${m.id}')" class="text-slate-400 hover:text-rose-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function openMileageModal() {
+            document.getElementById('mileageForm').reset();
+            document.getElementById('mlgId').value = '';
+            document.getElementById('mlgDate').value = new Date().toISOString().split('T')[0];
+            populateSelectOptions();
+            document.getElementById('mileageModal').classList.remove('hidden');
+        }
+
+        function saveMileage(e) {
+            e.preventDefault();
+            const start = parseFloat(document.getElementById('mlgOdoStart').value) || 0;
+            const end = parseFloat(document.getElementById('mlgOdoEnd').value) || 0;
+
+            if (end <= start) {
+                alert('Odometer akhir harus lebih besar!');
+                return;
+            }
+
+            const dist = end - start;
+            const toll = parseFloat(document.getElementById('mlgToll').value) || 0;
+            const parking = parseFloat(document.getElementById('mlgParking').value) || 0;
+            const totalCost = (dist * store.settings.costPerUnit) + toll + parking;
+            const vehId = document.getElementById('mlgVehicle').value;
+
+            const mlgData = {
+                id: 'm_' + Date.now(),
+                date: document.getElementById('mlgDate').value,
+                category: document.getElementById('mlgCategory').value,
+                vehicleId: vehId,
+                driverId: document.getElementById('mlgDriver').value,
+                purpose: document.getElementById('mlgPurpose').value,
+                odoStart: start,
+                odoEnd: end,
+                distance: dist,
+                toll: toll,
+                parking: parking,
+                totalCost: totalCost
+            };
+
+            store.mileage.unshift(mlgData);
+
+            const veh = store.vehicles.find(v => v.id === vehId);
+            if (veh && end > veh.odometer) {
+                veh.odometer = end;
+            }
+
+            saveData();
+            closeModal('mileageModal');
+            showToast('Log perjalanan disimpan');
+        }
+
+        function deleteMileage(id) {
+            if (confirm('Hapus log perjalanan ini?')) {
+                store.mileage = store.mileage.filter(m => m.id !== id);
+                saveData();
+                showToast('Log perjalanan dihapus');
+            }
+        }
+
+        // ================= FUEL =================
+        function renderFuel() {
+            const tbody = document.getElementById('fuelTableBody');
+            if (store.fuel.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-500">Belum ada riwayat BBM.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = store.fuel.map(f => {
+                const vehName = getVehicleName(f.vehicleId);
+                return `
+                    <tr class="hover:bg-slate-700/30 transition">
+                        <td class="p-4 text-xs text-slate-300 font-medium">${f.date}</td>
+                        <td class="p-4 text-xs font-semibold text-white">${vehName}</td>
+                        <td class="p-4 text-xs font-mono">${f.volume} ${store.settings.fuelUnit === 'Liters' ? 'L' : 'Gal'}</td>
+                        <td class="p-4 text-xs text-slate-400">${formatCurrency(f.unitPrice)}</td>
+                        <td class="p-4 text-xs font-semibold text-emerald-400">${formatCurrency(f.cost)}</td>
+                        <td class="p-4 text-xs font-mono text-slate-300">${f.odometer.toLocaleString('id-ID')}</td>
+                        <td class="p-4 text-xs text-slate-400">${f.station || '-'}</td>
+                        <td class="p-4 text-right">
+                            <button onclick="deleteFuel('${f.id}')" class="text-slate-400 hover:text-rose-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function openFuelModal() {
+            document.getElementById('fuelForm').reset();
+            document.getElementById('fuelId').value = '';
+            document.getElementById('fuelDate').value = new Date().toISOString().split('T')[0];
+            populateSelectOptions();
+            document.getElementById('fuelModal').classList.remove('hidden');
+        }
+
+        function saveFuel(e) {
+            e.preventDefault();
+            const vol = parseFloat(document.getElementById('fuelVolume').value) || 0;
+            const cost = parseFloat(document.getElementById('fuelCost').value) || 0;
+            const odo = parseFloat(document.getElementById('fuelOdometer').value) || 0;
+            const vehId = document.getElementById('fuelVehicle').value;
+
+            const fuelData = {
+                id: 'f_' + Date.now(),
+                date: document.getElementById('fuelDate').value,
+                vehicleId: vehId,
+                volume: vol,
+                cost: cost,
+                unitPrice: vol > 0 ? Math.round(cost / vol) : 0,
+                odometer: odo,
+                station: document.getElementById('fuelStation').value
+            };
+
+            store.fuel.unshift(fuelData);
+
+            const veh = store.vehicles.find(v => v.id === vehId);
+            if (veh && odo > veh.odometer) {
+                veh.odometer = odo;
+            }
+
+            saveData();
+            closeModal('fuelModal');
+            showToast('Log BBM ditambahkan');
+        }
+
+        function deleteFuel(id) {
+            if (confirm('Hapus entri ini?')) {
+                store.fuel = store.fuel.filter(f => f.id !== id);
+                saveData();
+                showToast('Log BBM dihapus');
+            }
+        }
+
+        // ================= MAINTENANCE =================
+        function renderMaintenance() {
+            const tbody = document.getElementById('maintenanceTableBody');
+            if (store.maintenance.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Belum ada riwayat perawatan.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = store.maintenance.map(m => {
+                const vehName = getVehicleName(m.vehicleId);
+                return `
+                    <tr class="hover:bg-slate-700/30 transition">
+                        <td class="p-4 text-xs text-slate-300 font-medium">${m.date}</td>
+                        <td class="p-4 text-xs font-semibold text-white">${vehName}</td>
+                        <td class="p-4 text-xs font-medium text-amber-400">${m.type}</td>
+                        <td class="p-4 text-xs text-slate-400">${m.garage || '-'}</td>
+                        <td class="p-4 text-xs font-semibold text-emerald-400">${formatCurrency(m.cost)}</td>
+                        <td class="p-4 text-xs text-slate-300">${m.nextDate || 'Tidak diset'}</td>
+                        <td class="p-4 text-right">
+                            <button onclick="deleteMaintenance('${m.id}')" class="text-slate-400 hover:text-rose-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function openMaintenanceModal() {
+            document.getElementById('maintenanceForm').reset();
+            document.getElementById('mntId').value = '';
+            document.getElementById('mntDate').value = new Date().toISOString().split('T')[0];
+            populateSelectOptions();
+            document.getElementById('maintenanceModal').classList.remove('hidden');
+        }
+
+        function saveMaintenance(e) {
+            e.preventDefault();
+            const vehId = document.getElementById('mntVehicle').value;
+
+            const mntData = {
+                id: 'mt_' + Date.now(),
+                date: document.getElementById('mntDate').value,
+                vehicleId: vehId,
+                type: document.getElementById('mntType').value,
+                garage: document.getElementById('mntGarage').value,
+                cost: parseFloat(document.getElementById('mntCost').value) || 0,
+                nextDate: document.getElementById('mntNextDate').value
+            };
+
+            store.maintenance.unshift(mntData);
+            saveData();
+            closeModal('maintenanceModal');
+            showToast('Log perawatan disimpan');
+        }
+
+        function deleteMaintenance(id) {
+            if (confirm('Hapus servis ini?')) {
+                store.maintenance = store.maintenance.filter(m => m.id !== id);
+                saveData();
+                showToast('Log perawatan dihapus');
+            }
+        }
+
+        // ================= EXPENSES =================
+        function renderExpenses() {
+            const tbody = document.getElementById('expenseTableBody');
+            if (store.expenses.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">Belum ada pengeluaran operasional.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = store.expenses.map(e => {
+                const vehName = getVehicleName(e.vehicleId);
+                return `
+                    <tr class="hover:bg-slate-700/30 transition">
+                        <td class="p-4 text-xs text-slate-300 font-medium">${e.date}</td>
+                        <td class="p-4 text-xs font-semibold text-white">${vehName}</td>
+                        <td class="p-4 text-xs">
+                            <span class="px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 font-medium">${e.category}</span>
+                        </td>
+                        <td class="p-4 text-xs text-slate-300">${e.description}</td>
+                        <td class="p-4 text-xs font-semibold text-emerald-400">${formatCurrency(e.amount)}</td>
+                        <td class="p-4 text-right">
+                            <button onclick="deleteExpense('${e.id}')" class="text-slate-400 hover:text-rose-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function openExpenseModal() {
+            document.getElementById('expenseForm').reset();
+            document.getElementById('expId').value = '';
+            document.getElementById('expDate').value = new Date().toISOString().split('T')[0];
+            populateSelectOptions();
+            document.getElementById('expenseModal').classList.remove('hidden');
+        }
+
+        function saveExpense(e) {
+            e.preventDefault();
+            const expData = {
+                id: 'e_' + Date.now(),
+                date: document.getElementById('expDate').value,
+                vehicleId: document.getElementById('expVehicle').value,
+                category: document.getElementById('expCategory').value,
+                amount: parseFloat(document.getElementById('expAmount').value) || 0,
+                description: document.getElementById('expDescription').value
+            };
+
+            store.expenses.unshift(expData);
+            saveData();
+            closeModal('expenseModal');
+            showToast('Pengeluaran dicatat');
+        }
+
+        function deleteExpense(id) {
+            if (confirm('Hapus pengeluaran ini?')) {
+                store.expenses = store.expenses.filter(e => e.id !== id);
+                saveData();
+                showToast('Pengeluaran dihapus');
+            }
+        }
+
+        // ================= SETTINGS =================
+        function loadSettingsForm() {
+            document.getElementById('settingCurrency').value = store.settings.currency;
+            document.getElementById('settingDistanceUnit').value = store.settings.distanceUnit;
+            document.getElementById('settingFuelUnit').value = store.settings.fuelUnit;
+            document.getElementById('settingCostPerUnit').value = store.settings.costPerUnit;
+        }
+
+        function saveSettings(e) {
+            e.preventDefault();
+            store.settings = {
+                currency: document.getElementById('settingCurrency').value,
+                distanceUnit: document.getElementById('settingDistanceUnit').value,
+                fuelUnit: document.getElementById('settingFuelUnit').value,
+                costPerUnit: parseFloat(document.getElementById('settingCostPerUnit').value) || 0
+            };
+            saveData();
+            showToast('Pengaturan disimpan');
+        }
+
+        function clearAllData() {
+            if (confirm('Hapus seluruh data secara permanen?')) {
+                localStorage.removeItem(STORAGE_KEY);
+                store = {
+                    settings: { currency: 'Rp', distanceUnit: 'km', fuelUnit: 'Liters', costPerUnit: 2500 },
+                    vehicles: [], drivers: [], mileage: [], fuel: [], maintenance: [], expenses: []
+                };
+                saveData();
+                showToast('Semua data dibersihkan');
+            }
+        }
+
+        // ================= EXPORT & IMPORT =================
+        function exportDataJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(store, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `FleetTracker_Backup_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importDataJSON(event) {
+            const fileReader = new FileReader();
+            fileReader.onload = function(e) {
+                try {
+                    const importedStore = JSON.parse(e.target.result);
+                    if (importedStore && importedStore.vehicles) {
+                        store = importedStore;
+                        saveData();
+                        showToast('Data berhasil di-import!');
+                    } else {
+                        alert('Format JSON tidak sesuai.');
+                    }
+                } catch (err) {
+                    alert('Gagal membaca file JSON.');
+                }
+            };
+            if (event.target.files[0]) {
+                fileReader.readAsText(event.target.files[0]);
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
